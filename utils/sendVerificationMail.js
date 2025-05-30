@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 const sendVerificationEmail = async (email, token) => {
-  const link = `http://localhost:5173/verify/${token}`;
+  const link = `http://careertest.psginstitutions.in/verify/${token}`;
   
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
