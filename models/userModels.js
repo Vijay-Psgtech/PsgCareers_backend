@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema({
     isVerified: { type: Boolean, default: false },
     verificationToken: { type: String },
     verificationTokenExpires: { type: Date },
-    role:{type:String,enum:['user','admin'],default:'user'}
+    institution : { type: String },
+    role:{type:String,enum:['user','admin','superadmin'],default:'user'} 
 });
 
 //Auto-generate userId before Saving
