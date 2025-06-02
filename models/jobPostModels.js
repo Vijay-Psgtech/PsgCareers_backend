@@ -23,6 +23,14 @@ const JobPostSchema = new mongoose.Schema({
   experienceMax: { type: Number },
   status:{type:String,enum:['active','closed'],default:'active'},
   importantSkills: [{ type: String }],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }
 }, {
   timestamps: true });
 

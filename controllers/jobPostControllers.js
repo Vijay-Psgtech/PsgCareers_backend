@@ -1,19 +1,34 @@
 const JobPost = require('../models/jobPostModels');
 
 const getJobs = async(req,res)=>{
-    console.log('getjobs api');
     try {
         const { status } = req.query;
 
         let query = {};
+
+        // only show institution jobs for normal admin
+        if (req.user.role === 'admin') {
+            query.institution = req.user.institution;
+        }
+
         if (status) {
-        query.status = { $regex: new RegExp(`^${status}$`, 'i') };
+            query.status = { $regex: new RegExp(`^${status}$`, 'i') };
         }
 
         console.log("Query used:", query);
 
-        const jobs = await JobPost.find(query);
+        const jobs = await JobPost.find(query).populate('createdBy','first_name').populate('updatedBy','first_name').sort({createdAt:-1});
         res.json(jobs);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+}
+
+const getActiveJobs = async(req,res) => {
+    try{
+        const activeJobs = await JobPost.find({ status : 'active'});
+        res.status(200).json(activeJobs);
+
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
@@ -21,12 +36,29 @@ const getJobs = async(req,res)=>{
 
 const addJobPost = async(req,res)=>{
     try {
-        const newJobPost = new JobPost(req.body);
+        const newJobPost = new JobPost({...req.body,createdBy: req.user._id, updatedBy: req.user._id});
         await newJobPost.save();
         res.status(201).json({ jobId: newJobPost.jobId });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to save job' });
+    }
+}
+
+const updateJobByJobId  =async(req,res)=>{
+    const { jobId } = req.params;
+    const updatedData = {...req.body,updatedBy:req.user._id};
+
+    try {
+        const job = await JobPost.findOneAndUpdate({ jobId },updatedData,{ new: true });
+
+        if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+        }
+
+        res.json(job);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
     }
 }
 
@@ -46,7 +78,7 @@ const jobStatusUpdate = async(req,res)=>{
 const getJobsById = async(req,res)=>{
     try {
      const { jobId } = req.params;
-     const job = await JobPost.findOne({ jobId });
+     const job = await JobPost.findOne({ jobId }).populate('createdBy','first_name').populate('updatedBy','first_name');
         if (!job) {
         return res.status(404).json({ message: 'Job not found' });
         }
@@ -56,4 +88,36 @@ const getJobsById = async(req,res)=>{
     }
 }
 
-module.exports = {getJobs,addJobPost,jobStatusUpdate,getJobsById};
+const copyJob = async (req, res) => {
+    try {
+        const originalJob = await JobPost.findOne({ jobId: req.params.jobId });
+        if (!originalJob) return res.status(404).json({ message: "Job not found" });
+
+        // Remove _id and jobId for the copy
+        const { _id, jobId, createdAt, updatedAt, ...jobData } = originalJob.toObject();
+
+        const copiedJob = new JobPost({ ...jobData});
+        await copiedJob.save();
+
+        res.status(201).json({ jobId: copiedJob.jobId });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+const DeleteJob = async(req,res) => {
+    await JobPost.findByIdAndDelete(req.params.id);
+    res.json({message:'Job Deleted'});
+}
+
+
+module.exports = {
+    getJobs,
+    addJobPost,
+    updateJobByJobId,
+    jobStatusUpdate,
+    getJobsById,
+    copyJob,
+    DeleteJob,
+    getActiveJobs
+};
