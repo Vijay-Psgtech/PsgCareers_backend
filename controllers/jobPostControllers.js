@@ -1,15 +1,11 @@
 const JobPost = require('../models/jobPostModels');
+const Application = require('../models/ApplicationModel');
 
 const getJobs = async(req,res)=>{
     try {
         const { status } = req.query;
 
         let query = {};
-
-        // only show institution jobs for normal admin
-        if (req.user.role === 'admin') {
-            query.institution = req.user.institution;
-        }
 
         if (status) {
             query.status = { $regex: new RegExp(`^${status}$`, 'i') };
@@ -19,16 +15,6 @@ const getJobs = async(req,res)=>{
 
         const jobs = await JobPost.find(query).populate('createdBy','first_name').populate('updatedBy','first_name').sort({createdAt:-1});
         res.json(jobs);
-    } catch (err) {
-        res.status(500).json({ message: 'Server error', error: err.message });
-    }
-}
-
-const getActiveJobs = async(req,res) => {
-    try{
-        const activeJobs = await JobPost.find({ status : 'active'});
-        res.status(200).json(activeJobs);
-
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
@@ -110,6 +96,81 @@ const DeleteJob = async(req,res) => {
     res.json({message:'Job Deleted'});
 }
 
+const JobsWithCount = async(req,res)=>{
+    try{
+        const { status } = req.query;
+        let query = {};
+
+        if (req.user.role === 'admin') {
+            query.institution = req.user.institution;
+        }
+
+        if (status) {
+            query.status = { $regex: new RegExp(`^${status}$`, 'i') };
+        }
+        const jobs = await JobPost.aggregate([
+            { $match: query },
+            // Join with jobapplications to count candidates
+            {
+                $lookup: {
+                    from: "applications", 
+                    localField: "jobId",
+                    foreignField: "jobId",
+                    as: "applications"
+                }
+            },
+            {
+                $addFields: {
+                    candidateCount: { $size: "$applications" },
+                    newCandidateCount : {
+                        $size : {
+                            $filter: {
+                                input: '$applications',
+                                as: "app",
+                                cond: { $eq: ["$$app.status", "Submitted"] }
+                            }
+                        }
+                    }
+                }
+            },
+            // Join with users for createdBy
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'createdBy',
+                    foreignField: '_id',
+                    as: 'createdByUser'
+                }
+            },
+            {
+                $unwind: {
+                    path: "$createdByUser",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            // Add only first_name from both lookups
+            {
+                $addFields: {
+                    createdBy: "$createdByUser.first_name",
+                }
+            },
+
+            {
+                $project: {
+                    applications: 0,
+                    createdByUser: 0,
+                }
+            },
+            // Sort by createdAt descending (latest first)
+            { $sort: { createdAt: -1 } } 
+        ]);
+        res.status(200).json(jobs);
+    } catch(error) {
+        console.error("Error fetching job posts with candidate count:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
 
 module.exports = {
     getJobs,
@@ -119,5 +180,5 @@ module.exports = {
     getJobsById,
     copyJob,
     DeleteJob,
-    getActiveJobs
+    JobsWithCount
 };

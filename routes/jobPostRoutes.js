@@ -9,17 +9,17 @@ const {
     getJobsById,
     copyJob,
     DeleteJob,
-    getActiveJobs
+    JobsWithCount
 } = require('../controllers/jobPostControllers');
 
-router.get('/getJobs',auth,getJobs);
+router.get('/getJobs',getJobs);
 router.get('/getJobs/:jobId',getJobsById)
 router.post('/addJobPost',auth,addJobPost);
 router.put('/updateByJobId/:jobId',auth,updateJobByJobId);
 router.put('/:id/status',jobStatusUpdate);
 router.post('/copy/:jobId',copyJob);
 router.delete('/:id',DeleteJob);
-router.get('/getActiveJobs',getActiveJobs);
+router.get('/JobsWithCount',auth,JobsWithCount);
 
 module.exports = router;
 
