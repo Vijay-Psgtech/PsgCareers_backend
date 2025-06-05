@@ -8,9 +8,22 @@ const path = require('path');
 dotenv.config();
 const app = express();
 
+const allowedOrigins = [
+  "https://careertest.psginstitutions.in", // test server
+  "https://careerserver.psginstitutions.in", // production if needed
+];
+
 app.use(cors({
-  origin: "*"
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true // if using cookies or auth headers
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
