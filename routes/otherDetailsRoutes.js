@@ -23,24 +23,23 @@ const upload = multer({ storage });
 // Save or update OtherDetails along with resume file upload
 router.post('/', upload.single('resume'), async (req, res) => {
   const {
-    userId, jobId,
+    userId,
     reference1, reference2,
     lastPay, expectedPay, joiningTime,
     relativesAtPSG, attendedPSGInterview,
     vacancySource, otherComments,
   } = req.body;
 
-  if (!userId || !jobId) {
-    return res.status(400).json({ error: 'Missing userId or jobId' });
+  if (!userId ) {
+    return res.status(400).json({ error: 'Missing userId' });
   }
 
   try {
-    let doc = await OtherDetails.findOne({ userId, jobId });
+    let doc = await OtherDetails.findOne({ userId });
     const resumeUrl = req.file ? `/uploads/resumes/${req.file.filename}` : (doc ? doc.resumeUrl : null);
 
     const newData = {
       userId,
-      jobId,
       reference1: JSON.parse(reference1),
       reference2: JSON.parse(reference2),
       lastPay,
@@ -54,8 +53,8 @@ router.post('/', upload.single('resume'), async (req, res) => {
     };
 
     if (doc) {
-      await OtherDetails.updateOne({ userId, jobId }, newData);
-      doc = await OtherDetails.findOne({ userId, jobId });
+      await OtherDetails.updateOne({ userId }, newData);
+      doc = await OtherDetails.findOne({ userId });
     } else {
       doc = new OtherDetails(newData);
       await doc.save();
@@ -68,10 +67,10 @@ router.post('/', upload.single('resume'), async (req, res) => {
 });
 
 // Get OtherDetails by userId & jobId
-router.get('/:userId/:jobId', async (req, res) => {
+router.get('/:userId/', async (req, res) => {
   try {
-    const { userId, jobId } = req.params;
-    const doc = await OtherDetails.findOne({ userId, jobId });
+    const { userId } = req.params;
+    const doc = await OtherDetails.findOne({ userId });
     if (!doc) return res.status(404).json({ error: 'Other Details not found' });
     res.json(doc);
   } catch (err) {

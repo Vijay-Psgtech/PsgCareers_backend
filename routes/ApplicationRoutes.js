@@ -6,5 +6,6 @@ router.post('/submit/:userId/:jobId',applicationController.submitApplication);
 router.get('/candidates/:jobId',applicationController.candidateDetails);
 router.put('/updateStage',applicationController.updateCandidateStage);
 router.put('/updateStatus',applicationController.updateCandidateStatus);
+router.get("/status/:userId", applicationController.getUserApplications);
 
 module.exports = router;
