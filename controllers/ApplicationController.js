@@ -120,3 +120,52 @@ exports.updateCandidateStatus = async(req,res) => {
     );
     res.status(200).json({ message: "Status updated" });
 }
+
+exports.getUserApplications = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const applications = await Application.aggregate([
+      {
+        $match: { userId }
+      },
+      {
+        $lookup: {
+          from: "jobposts",
+          localField: "jobId",
+          foreignField: "jobId", 
+          as: "jobDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$jobDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          applicationId: 1,
+          jobId: "$jobDetails.jobId",
+          jobTitle: "$jobDetails.jobTitle",
+          category: "$jobDetails.jobCategory",
+          department: "$jobDetails.department",
+          status: 1,
+          updatedAt: 1,
+          timeline: 1
+        }
+      }
+    ]);
+
+    if (!applications || applications.length === 0) {
+      return res.status(404).json({ success: false, message: "No applications found" });
+    }
+
+    return res.status(200).json({ success: true, applications });
+
+  } catch (error) {
+    console.error("Error in getUserApplications:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
