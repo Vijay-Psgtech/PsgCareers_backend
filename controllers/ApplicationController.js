@@ -64,42 +64,78 @@ exports.submitApplication = async(req,res) => {
 }
 
 
-exports.candidateDetails = async(req,res) => {
-    try{
-        const jobId = req.params.jobId;
-        const applications = await Application.aggregate([
-            {$match: { jobId }},
-            {
-                $lookup: {
-                    from: "personaldetails",
-                    localField: "userId",
-                    foreignField: "userId",
-                    as: "personalDetails"
-                }
-            },
-            {
-                $unwind: {
-                    path: "$personalDetails",
-                    preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $project: {
-                    userId: 1,
-                    jobId: 1,
-                    stage: 1,
-                    createdAt: 1,
-                    status: 1,
-                    personalDetails: 1
-                }
-            }
-        ]);
-        res.status(200).json(applications);
-    } catch(error){
-        console.error("Error fetching applicants:", error);
-        res.status(500).json({ message: "Server error" });
-    }
-}
+exports.candidateDetails = async (req, res) => {
+  try {
+    const jobId = req.params.jobId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const matchStage = { $match: { jobId } };
+
+    const lookupStage = {
+      $lookup: {
+        from: "personaldetails",
+        localField: "userId",
+        foreignField: "userId",
+        as: "personalDetails"
+      }
+    };
+
+    const unwindStage = {
+      $unwind: {
+        path: "$personalDetails",
+        preserveNullAndEmptyArrays: true
+      }
+    };
+
+    const projectStage = {
+      $project: {
+        userId: 1,
+        jobId: 1,
+        stage: 1,
+        status: 1,
+        createdAt: 1,
+        personalDetails: 1
+      }
+    };
+
+    const facetStage = {
+      $facet: {
+        data: [
+          { $skip: skip },
+          { $limit: limit }
+        ],
+        totalCount: [
+          { $count: "count" }
+        ]
+      }
+    };
+
+    const results = await Application.aggregate([
+      matchStage,
+      lookupStage,
+      unwindStage,
+      projectStage,
+      facetStage
+    ]);
+
+    const applications = results[0].data;
+    const total = results[0].totalCount[0]?.count || 0;
+
+    res.status(200).json({
+      data: applications,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalItems: total
+    });
+
+  } catch (error) {
+    console.error("Error fetching applicants:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 exports.updateCandidateStage = async(req,res) => {
     const { userId, jobId, stage } = req.body;
@@ -152,6 +188,7 @@ exports.getUserApplications = async (req, res) => {
           category: "$jobDetails.jobCategory",
           department: "$jobDetails.department",
           status: 1,
+          stage: 1,
           updatedAt: 1,
           timeline: 1
         }
@@ -169,3 +206,18 @@ exports.getUserApplications = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+exports.getUsersById= async(req,res)=>{
+  const { userId } = req.params;
+  try{
+    const application = await Application.findOne({ userId, isSubmitted: true}).sort({ updatedAt: -1});
+    if(!application) 
+    {
+      return res.status(404).json({ message: "No submitted applications found"});
+    }
+    res.status(200).json(application);
+  } catch(err) {
+    console.error("Error fetching sumbitted applications:", err);
+    res.status(500).josn({message: 'Server error'});
+  }
+}
