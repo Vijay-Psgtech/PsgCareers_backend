@@ -3,7 +3,7 @@ const Application = require('../models/ApplicationModel');
 
 const getJobs = async(req,res)=>{
     try {
-        const { status } = req.query;
+        const { status,jobCategory } = req.query;
 
         let query = {};
 
@@ -11,9 +11,17 @@ const getJobs = async(req,res)=>{
             query.status = { $regex: new RegExp(`^${status}$`, 'i') };
         }
 
+        if(jobCategory){
+            query.jobCategory = { $regex: new RegExp(`^${jobCategory}$`, 'i') };
+        }
+
         console.log("Query used:", query);
 
-        const jobs = await JobPost.find(query).populate('createdBy','first_name').populate('updatedBy','first_name').sort({createdAt:-1});
+        const jobs = await JobPost.find(query)
+        .populate('createdBy','first_name')
+        .populate('updatedBy','first_name')
+        .sort({createdAt:-1});
+        
         res.json(jobs);
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });

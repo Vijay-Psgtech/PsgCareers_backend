@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
     verificationToken: { type: String },
     verificationTokenExpires: { type: Date },
     institution : { type: String },
+    jobCategory : { type: String},
     role:{type:String,enum:['user','admin','superadmin'],default:'user'} 
 });
 
