@@ -5,9 +5,9 @@ const User = require('../models/userModels.js');
 const sendVerificationEmail = require('../utils/sendVerificationMail.js');
 const sendResetPasswordEmail = require('../utils/sendResetPasswordEmail.js');
 
-const generateToken = (userId) => {
-  return jwt.sign({ id: userId}, process.env.JWT_SECRET, {
-    expiresIn: '15m', // expires in 15 minutes
+const generateToken = (userId,institution,role) => {
+  return jwt.sign({ id: userId, institution: institution, role:role }, process.env.JWT_SECRET, {
+    expiresIn: '1d',
   });
 };
 
@@ -25,20 +25,20 @@ const login = async(req,res) =>{
   const match = await bcrypt.compare(password,user.password);
   if(!match) return res.status(401).json({message:'Invalid Password'});
 
-  const token = generateToken(user._id);
+  const token = generateToken(user._id,user.institution,user.role);
 
-  res.status(200).json({message:'Login successful', token, role:user.role, name:user.first_name, userId:user.userId});
+  res.status(200).json({message:'Login successful', token, role:user.role, name:user.first_name, userId:user.userId, jobCategory:user.jobCategory});
 }
 
 // Register
 const register = async(req,res) =>{
-  const {first_name, last_name, mobile, email} = req.body;
+  const {first_name, last_name, mobile, email, jobCategory} = req.body;
 
   const exisiting = await User.findOne({email});
   if(exisiting) return res.status(400).json({message:'Email Already exists'});
 
   const token = crypto.randomBytes(32).toString('hex');
-  const user = new User({first_name, last_name, mobile, email, verificationToken:token, verificationTokenExpires:Date.now() + 3600000});
+  const user = new User({first_name, last_name, mobile, email, jobCategory, verificationToken:token, verificationTokenExpires:Date.now() + 3600000});
   
   await user.save();
   await sendVerificationEmail(email, token);
