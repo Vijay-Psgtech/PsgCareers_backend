@@ -69,56 +69,75 @@ exports.candidateDetails = async (req, res) => {
     const jobId = req.params.jobId;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-
     const skip = (page - 1) * limit;
 
-    const matchStage = { $match: { jobId } };
-
-    const lookupStage = {
-      $lookup: {
-        from: "personaldetails",
-        localField: "userId",
-        foreignField: "userId",
-        as: "personalDetails"
-      }
-    };
-
-    const unwindStage = {
-      $unwind: {
-        path: "$personalDetails",
-        preserveNullAndEmptyArrays: true
-      }
-    };
-
-    const projectStage = {
-      $project: {
-        userId: 1,
-        jobId: 1,
-        stage: 1,
-        status: 1,
-        createdAt: 1,
-        personalDetails: 1
-      }
-    };
-
-    const facetStage = {
-      $facet: {
-        data: [
-          { $skip: skip },
-          { $limit: limit }
-        ],
-        totalCount: [
-          { $count: "count" }
-        ]
-      }
-    };
-
     const results = await Application.aggregate([
-      matchStage,
-      lookupStage,
-      unwindStage,
-      projectStage,
-      facetStage
+      { $match: { jobId } },
+
+      // Lookup: Personal Details
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "personalDetails"
+        }
+      },
+      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+
+      // Lookup: Education Details
+      {
+        $lookup: {
+          from: "educationdetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "educationDetails"
+        }
+      },
+
+      // Lookup: Work Experience
+      {
+        $lookup: {
+          from: "workexperiencedetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "workExperienceDetails"
+        }
+      },
+
+      // Lookup: Other Details
+      {
+        $lookup: {
+          from: "otherdetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "otherDetails"
+        }
+      },
+
+      // Project required fields
+      {
+        $project: {
+          userId: 1,
+          jobId: 1,
+          stage: 1,
+          status: 1,
+          rejectedAtStage: 1,
+          createdAt: 1,
+          personalDetails: 1,
+          educationDetails: 1,
+          workExperienceDetails: 1,
+          otherDetails: 1
+        }
+      },
+
+      // Pagination
+      {
+        $facet: {
+          data: [{ $skip: skip }, { $limit: limit }],
+          totalCount: [{ $count: "count" }]
+        }
+      }
     ]);
 
     const applications = results[0].data;
@@ -139,12 +158,30 @@ exports.candidateDetails = async (req, res) => {
 
 exports.updateCandidateStage = async(req,res) => {
     const { userId, jobId, stage } = req.body;
-    await Application.findOneAndUpdate(
+    try{
+      const application = await Application.findOne({ userId, jobId });
+      if(!application){
+        return res.status(404).json({message: 'Application not found'});
+      }
+
+      const updateFields = { stage };
+
+      if(stage === 'Not Selected'){
+        updateFields.rejectedAtStage = application.stage  //Previous Stage
+      } else {
+        updateFields.rejectedAtStage = null;   // clear rejection
+      }
+
+      await Application.findOneAndUpdate(
         { userId, jobId },
-        { stage },
+        updateFields,
         { new: true }
-    );
-    res.status(200).json({ message: "Stage updated" });
+      );
+      res.status(200).json({ message: "Stage updated" });
+    } catch(err) {
+      res.status(500).json({ message: "Server error", error: err.message });
+    }
+    
 }
 
 exports.updateCandidateStatus = async(req,res) => {
@@ -189,6 +226,7 @@ exports.getUserApplications = async (req, res) => {
           department: "$jobDetails.department",
           status: 1,
           stage: 1,
+          rejectedAtStage: 1,
           updatedAt: 1,
           timeline: 1
         }
