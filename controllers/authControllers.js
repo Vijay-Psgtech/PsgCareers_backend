@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const User = require('../models/userModels.js');
 const sendVerificationEmail = require('../utils/sendVerificationMail.js');
 const sendResetPasswordEmail = require('../utils/sendResetPasswordEmail.js');
+const logLoginActivity = require('../utils/logLoginActivity.js'); // ✅ IMPORTED
 
 const generateToken = (userId,institution,role) => {
   return jwt.sign({ id: userId, institution: institution, role:role }, process.env.JWT_SECRET, {
@@ -26,6 +27,9 @@ const login = async(req,res) =>{
   if(!match) return res.status(401).json({message:'Invalid Password'});
 
   const token = generateToken(user._id,user.institution,user.role);
+  
+  // ✅ Log login event
+  await logLoginActivity(user.userId, req);
 
   res.status(200).json({message:'Login successful', token, role:user.role, name:user.first_name, userId:user.userId, jobCategory:user.jobCategory});
 }
@@ -122,6 +126,7 @@ const reset_password = async(req,res)=>{
     const hashed_password = await bcrypt.hash(password, 10); 
     user.password = hashed_password;
     user.confirm_password = hashed_password;
+    user.passwordChangeCount = (user.passwordChangeCount || 0) + 1;
     await user.save();
     res.json({message:"Password reset succesfully!"});
   }catch(err){

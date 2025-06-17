@@ -8,9 +8,7 @@ const path = require('path');
 dotenv.config();
 const app = express();
 
-app.use(cors({
-  origin: "*"
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
@@ -26,6 +24,7 @@ const dropDownRoutes = require('./routes/dropDownRoutes.js');
 const applicationRoutes = require('./routes/ApplicationRoutes.js');
 const otherDetailsRoutes = require('./routes/otherDetailsRoutes.js');
 const researchRoutes = require('./routes/researchRoutes.js');
+const userRoutes = require('./routes/userRoutes.js');
 
 // Use routes
 app.use('/api/auth',authRoutes);
@@ -37,6 +36,7 @@ app.use('/api/dropDown',dropDownRoutes);
 app.use('/api/applications',applicationRoutes);
 app.use('/api/otherDetails', otherDetailsRoutes);
 app.use('/api/research', researchRoutes);
+app.use('/api/user', userRoutes);
 
 
 /*MongoDB connection*/
