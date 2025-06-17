@@ -14,21 +14,7 @@ const userSchema = new mongoose.Schema({
     verificationTokenExpires: { type: Date },
     institution : { type: String },
     jobCategory : { type: String},
-    about : { type: String },
-    role:{type:String,enum:['user','admin','superadmin'],default:'user'},
-    location: { type: String },
-    photo: { type: String }, // path to uploaded image
-    passwordChangeCount: {
-        type: Number,
-        default: 0,
-    },
-    loginHistory: [
-        {
-        ip: String,
-        userAgent: String,
-        timestamp: { type: Date, default: Date.now },
-        },
-    ],
+    role:{type:String,enum:['user','admin','superadmin'],default:'user'} 
 });
 
 //Auto-generate userId before Saving
@@ -42,12 +28,6 @@ userSchema.pre('save', async function(next){
         this.userId = `UID-${String(counter.seq).padStart(4, '0')}`;
     }
     next();
-});
-
-// ✅ Compare password method
-userSchema.methods.comparePassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
+})
 
 module.exports = mongoose.model('User',userSchema);
