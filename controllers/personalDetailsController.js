@@ -1,4 +1,4 @@
-const PersonalDetails = require("../models/personalDetails");
+const PersonalDetails = require("../models/PersonalDetails");
 const path = require("path");
 const fs = require("fs");
 

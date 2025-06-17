@@ -39,6 +39,7 @@ const dropDownRoutes = require('./routes/dropDownRoutes.js');
 const applicationRoutes = require('./routes/ApplicationRoutes.js');
 const otherDetailsRoutes = require('./routes/otherDetailsRoutes.js');
 const researchRoutes = require('./routes/researchRoutes.js');
+const userRoutes = require('./routes/userRoutes.js');
 
 // Use routes
 app.use('/api/auth',authRoutes);
@@ -50,6 +51,7 @@ app.use('/api/dropDown',dropDownRoutes);
 app.use('/api/applications',applicationRoutes);
 app.use('/api/otherDetails', otherDetailsRoutes);
 app.use('/api/research', researchRoutes);
+app.use('/api/user', userRoutes);
 
 
 /*MongoDB connection*/
