@@ -36,13 +36,13 @@ const login = async(req,res) =>{
 
 // Register
 const register = async(req,res) =>{
-  const {first_name, last_name, mobile, email, jobCategory} = req.body;
+  const {first_name, last_name, mobile, email, jobCategory, institution, role} = req.body;
 
   const exisiting = await User.findOne({email});
   if(exisiting) return res.status(400).json({message:'Email Already exists'});
 
   const token = crypto.randomBytes(32).toString('hex');
-  const user = new User({first_name, last_name, mobile, email, jobCategory, verificationToken:token, verificationTokenExpires:Date.now() + 3600000});
+  const user = new User({first_name, last_name, mobile, email, jobCategory, institution, role, verificationToken:token, verificationTokenExpires:Date.now() + 3600000});
   
   await user.save();
   await sendVerificationEmail(email, token);
@@ -85,14 +85,13 @@ const set_password = async(req,res) => {
   if (!user || !user.isVerified) return res.status(400).json({ message: 'Unauthorized' });
 
   const hashed_password = await bcrypt.hash(password, 10); 
-  
 
   user.password = hashed_password;
   user.confirm_password = hashed_password;
-  
+  user.passwordChangeCount = (user.passwordChangeCount || 0) + 1;
 
   await user.save();
-  res.json({message:'Registration Complete..',userId:user._id});
+  res.json({message:'Password set successfully..',userId:user._id});
 
 }
 
@@ -126,7 +125,6 @@ const reset_password = async(req,res)=>{
     const hashed_password = await bcrypt.hash(password, 10); 
     user.password = hashed_password;
     user.confirm_password = hashed_password;
-    user.passwordChangeCount = (user.passwordChangeCount || 0) + 1;
     await user.save();
     res.json({message:"Password reset succesfully!"});
   }catch(err){
