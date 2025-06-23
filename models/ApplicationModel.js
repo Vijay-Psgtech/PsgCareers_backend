@@ -12,7 +12,8 @@ const ApplicationSchema = new mongoose.Schema({
   isSubmitted: { type: Boolean, default: false },
   status: { type: String, default: 'Draft' },
   stage:{type: String , default: 'Applied' },
-  rejectedAtStage: { type: String, default: null }
+  rejectedAtStage: { type: String, default: null },
+  remarks: { type: String, default: "" },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Application', ApplicationSchema);

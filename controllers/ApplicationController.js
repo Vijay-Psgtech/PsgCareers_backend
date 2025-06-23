@@ -68,7 +68,7 @@ exports.candidateDetails = async (req, res) => {
   try {
     const jobId = req.params.jobId;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
     const results = await Application.aggregate([
@@ -124,12 +124,16 @@ exports.candidateDetails = async (req, res) => {
           status: 1,
           rejectedAtStage: 1,
           createdAt: 1,
+          remarks: 1,
           personalDetails: 1,
           educationDetails: 1,
           workExperienceDetails: 1,
           otherDetails: 1
         }
       },
+
+      // Sort by createdAt descending (latest first)
+      { $sort: { createdAt: -1 } },
 
       // Pagination
       {
@@ -259,3 +263,18 @@ exports.getUsersById= async(req,res)=>{
     res.status(500).josn({message: 'Server error'});
   }
 }
+
+exports.updateRemarks = async (req, res) => {
+  const { userId, jobId, remark } = req.body;
+  try {
+    const updated = await Application.findOneAndUpdate(
+      { userId, jobId },
+      { remarks: remark },
+      { new: true }
+    );
+    res.status(200).json({ message: "Remarks updated", data: updated });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

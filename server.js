@@ -8,22 +8,7 @@ const path = require('path');
 dotenv.config();
 const app = express();
 
-const allowedOrigins = [
-  "https://careertest.psginstitutions.in", // test server
-  "https://careerserver.psginstitutions.in", // production if needed
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true // if using cookies or auth headers
-}));
-
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
@@ -40,6 +25,7 @@ const applicationRoutes = require('./routes/ApplicationRoutes.js');
 const otherDetailsRoutes = require('./routes/otherDetailsRoutes.js');
 const researchRoutes = require('./routes/researchRoutes.js');
 const userRoutes = require('./routes/userRoutes.js');
+const adminRoutes = require('./routes/adminRoutes.js');
 
 // Use routes
 app.use('/api/auth',authRoutes);
@@ -52,6 +38,7 @@ app.use('/api/applications',applicationRoutes);
 app.use('/api/otherDetails', otherDetailsRoutes);
 app.use('/api/research', researchRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/admin',adminRoutes);
 
 
 /*MongoDB connection*/
