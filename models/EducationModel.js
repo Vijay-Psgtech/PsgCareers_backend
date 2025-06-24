@@ -10,7 +10,9 @@ const educationEntrySchema = new mongoose.Schema({
   university: String,
   mode: String,
   type: String,
-  arrears: String
+  arrears: String,
+  certificate: String,         // 'Yes' or 'No'
+  certificateFile: String      // Filename if uploaded
 });
 
 const educationSchema = new mongoose.Schema({
@@ -22,4 +24,3 @@ const educationSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('EducationDetails', educationSchema);
-
