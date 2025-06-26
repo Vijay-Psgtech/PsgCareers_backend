@@ -1,6 +1,4 @@
 const WorkExperienceDetails = require('../models/WorkExperienceModel');
-const path = require("path");
-const fs = require("fs");
 
 exports.getWorkExperienceDetails = async (req, res) => {
   try {
@@ -15,26 +13,37 @@ exports.getWorkExperienceDetails = async (req, res) => {
 exports.saveWorkExperienceDetails = async(req,res) => {
     try {
         const { userId, teaching, industry } = req.body;
+        
+        const teachingList = JSON.parse(teaching || '[]');
+        const industryList = JSON.parse(industry || '[]');
 
-        const teachingFiles = req.files['teachingCertificates'] || [];
-        const industryFiles = req.files['industryCertificates'] || [];
+        const fileMap = {};
+        req.files?.forEach(file => {
+          const match = file.fieldname.match(/^(teachingCertificates|industryCertificates)_(\d+)$/);
+          if (match) {
+            console.log('reqFiles',req.files);
+            const type = match[1], index = parseInt(match[2]);
+            if (!fileMap[type]) fileMap[type] = {};
+            fileMap[type][index] = file.path;
+          }
+        });
 
-        const parsedTeaching = JSON.parse(teaching).map((item, i) => ({
-        ...item,
-        certificate: teachingFiles[i]?.filename || item.certificate || ''
+        const enrichedTeaching = teachingList.map((item, i) => ({
+          ...item,
+          certificate: fileMap.teachingCertificates?.[i] || item.certificate || ''
         }));
 
-        const parsedIndustry = JSON.parse(industry).map((item, i) => ({
-        ...item,
-        certificate: industryFiles[i]?.filename || item.certificate || ''
+        const enrichedIndustry = industryList.map((item, i) => ({
+          ...item,
+          certificate: fileMap.industryCertificates?.[i] || item.certificate || ''
         }));
-
+        
         // Upsert: Replace if existing, insert if not
         const saved = await WorkExperienceDetails.findOneAndUpdate(
         { userId },
         {
-            teaching: parsedTeaching,
-            industry: parsedIndustry,
+            teaching: enrichedTeaching,
+            industry: enrichedIndustry,
             updatedAt: new Date()
         },
         { upsert: true, new: true }

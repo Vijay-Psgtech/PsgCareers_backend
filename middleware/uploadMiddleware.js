@@ -1,44 +1,38 @@
+// ===== uploadMiddleware.js =====
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Define upload directory
-const profileUploadDir = path.join(__dirname, '../uploads/profiles');
-
-// Ensure directory exists
-if (!fs.existsSync(profileUploadDir)) {
-  fs.mkdirSync(profileUploadDir, { recursive: true });
-}
-
-// Define storage config
+// Dynamic destination based on fieldname
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, profileUploadDir);
+  destination: function (req, file, cb) {
+    let folder = 'uploads/misc';
+
+    // Map fieldname to folder
+    const folderMap = {
+      photo: 'uploads/personalDetails/photos',
+      resume: 'uploads/personalDetails/resumes',
+      educationCertificates: 'uploads/educationDetails/certificates',
+      teachingCertificates: 'uploads/workExperience/teachingDocs',
+      industryCertificates: 'uploads/workExperience/industryDocs',
+      profile: 'uploads/profile/pictures',
+    };
+
+    for (const key in folderMap) {
+      if (file.fieldname.startsWith(key)) {
+        folder = folderMap[key];
+        break;
+      }
+    }
+
+    fs.mkdirSync(folder, { recursive: true });
+    cb(null, folder);
   },
-  filename: (req, file, cb) => {
+  filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);
-    const uniqueSuffix = Date.now();
-    cb(null, `photo_${uniqueSuffix}${ext}`);
-  },
-});
-
-// File filter for image types
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-  if (!allowedTypes.includes(file.mimetype)) {
-    return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'Only .jpg, .jpeg, .png formats allowed!'));
+    const base = file.fieldname + '-' + Date.now();
+    cb(null, `${base}${ext}`);
   }
-  cb(null, true);
-};
-
-// Set upload middleware
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: {
-    fileSize: 2 * 1024 * 1024, // 2MB
-  },
 });
 
-module.exports = upload;
-;
+module.exports = multer({ storage });

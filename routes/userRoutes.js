@@ -19,7 +19,7 @@ const {
 router.get("/:userId", getUserProfile);
 
 // ✅ Update user profile (with optional photo upload)
-router.put("/update/:userId", upload.single("photo"), updateUserProfile);
+router.put("/update/:userId", upload.single("profile"), updateUserProfile);
 
 // ✅ Get number of applications submitted by user
 router.get("/application/count/:userId", getApplicationCount);
