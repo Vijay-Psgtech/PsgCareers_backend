@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 const sendVerificationEmail = async (email, token) => {
-  const link = `http://careertest.psginstitutions.in/verify/${token}`;
+  const link = `http://localhost:5173/verify/${token}`;
   
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
@@ -23,7 +23,7 @@ const sendVerificationEmail = async (email, token) => {
               <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                 <tr>
                   <td style="text-align: center; padding-bottom: 20px;">
-                    <img src="http://careertest.psginstitutions.in/public/logo.png" alt="PSG Careers" style="height: 60px;" />
+                    <img src="http://localhost:5173/public/logo.png" alt="PSG Careers" style="height: 60px;" />
                   </td>
                 </tr>
                 <tr>
