@@ -14,7 +14,8 @@ const generateToken = (userId,institution,role) => {
 
 // Login
 const login = async(req,res) =>{
-  const {email, password} = req.body;
+  const { password } = req.body;
+  const email = req.body.email.toLowerCase();
 
   const user = await User.findOne({email});
   if(!user) return res.status(404).json({message:'User not found'});
@@ -36,7 +37,8 @@ const login = async(req,res) =>{
 
 // Register
 const register = async(req,res) =>{
-  const {first_name, last_name, mobile, email, jobCategory, institution, role} = req.body;
+  const {first_name, last_name, mobile,  jobCategory, institution, role} = req.body;
+  const email = req.body.email.toLowerCase();
 
   const exisiting = await User.findOne({email});
   if(exisiting) return res.status(400).json({message:'Email Already exists'});
@@ -97,7 +99,7 @@ const set_password = async(req,res) => {
 
 // forgot-password
 const forgot_password = async(req,res)=>{
-  const { email } = req.body;
+ const email = req.body.email.toLowerCase();
   
   const user = await User.findOne({email});
   if(!user) return res.status(400).json({error:'No use with that email'});
