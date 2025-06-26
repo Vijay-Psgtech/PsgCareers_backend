@@ -1,6 +1,4 @@
 const EducationDetails = require('../models/EducationModel');
-const fs = require('fs');
-const path = require('path');
 
 exports.saveEducationDetails = async (req, res) => {
   try {
@@ -10,27 +8,24 @@ exports.saveEducationDetails = async (req, res) => {
     const extraCurricular = JSON.parse(req.body.extraCurricular || '[]');
     const achievements = req.body.achievements || "";
 
-    const uploadedFiles = req.files || [];
-
-    // Attach file names to corresponding education entries
-    let fileIndex = 0;
-    for (let i = 0; i < educationList.length; i++) {
-      if (educationList[i].certificate === 'Yes') {
-        const file = uploadedFiles[fileIndex];
-        if (file) {
-          educationList[i].certificateFile = file.filename;
-          fileIndex++;
-        } else {
-          educationList[i].certificateFile = "";
-        }
-      } else {
-        educationList[i].certificateFile = "";
+    const fileMap = {};
+    req.files.forEach(file => {
+      const match = file.fieldname.match(/^educationCertificates_(\d+)$/);
+      if (match) {
+        const index = parseInt(match[1]);
+        fileMap[index] = file.path;
       }
-    }
+    });
+
+    const enrichedList = educationList.map((entry, idx) => ({
+      ...entry,
+      certificate: fileMap[idx] || null
+    }));
+
 
     const payload = {
       userId,
-      educationList,
+      educationList: enrichedList,
       eligibilityTest,
       extraCurricular,
       achievements

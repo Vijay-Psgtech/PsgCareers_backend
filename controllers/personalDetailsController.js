@@ -1,6 +1,4 @@
 const PersonalDetails = require("../models/personalDetails");
-const path = require("path");
-const fs = require("fs");
 
 exports.getPersonalDetails = async (req, res) => {
   const { userId } = req.params;
@@ -60,8 +58,6 @@ exports.savePersonalDetails = async (req, res) => {
     languagesKnown = [];
   }
 
-  // Handle files: photo and resume
-  // Assuming you're using multer middleware to save files under /uploads folder
   const photoFile = req.files?.photo?.[0];
   const resumeFile = req.files?.resume?.[0];
 
@@ -100,10 +96,10 @@ exports.savePersonalDetails = async (req, res) => {
     };
 
     if (photoFile) {
-      updateData.photoUrl = photoFile.filename;
+      updateData.photoUrl = photoFile.path;
     }
     if (resumeFile) {
-      updateData.resumeUrl = resumeFile.filename;
+      updateData.resumeUrl = resumeFile.path;
     }
 
     if (record) {

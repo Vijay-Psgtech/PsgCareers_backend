@@ -20,7 +20,8 @@ const getAdminUsers = async(req,res) => {
 }
 
 const CreateAdmin = async (req,res) => {
-    const {first_name, last_name, email, mobile, institution} = req.body;
+    const {first_name, last_name,  mobile, institution} = req.body;
+    const email = req.body.email.toLowerCase();
 
     const exisiting = await User.findOne({ email });
     if(exisiting) return res.status(400).json({ message: 'Email Already exists'});
