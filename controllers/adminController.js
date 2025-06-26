@@ -1,7 +1,5 @@
 const User = require('../models/userModels.js');
-const crypto = require('crypto');
-const sendAdminUserVerificationMail = require('../utils/sendAdminUserVerificationMail.js');
-
+const bcrypt = require('bcrypt');
 
 const getAdminUsers = async(req,res) => {
     try{
@@ -20,13 +18,14 @@ const getAdminUsers = async(req,res) => {
 }
 
 const CreateAdmin = async (req,res) => {
-    const {first_name, last_name,  mobile, institution} = req.body;
+    const {first_name, last_name,  mobile, password, institution} = req.body;
     const email = req.body.email.toLowerCase();
 
     const exisiting = await User.findOne({ email });
     if(exisiting) return res.status(400).json({ message: 'Email Already exists'});
 
-    const token = crypto.randomBytes(32).toString('hex');
+    const hashedPassword = await bcrypt.hash(password, 10); 
+
     const user = new User({
         first_name,
         last_name,
@@ -34,14 +33,13 @@ const CreateAdmin = async (req,res) => {
         mobile,
         institution,
         role: 'admin',
-        verificationToken: token,
-        verificationTokenExpires: Date.now() + 3600000
+        password: hashedPassword,
+        confirm_password: hashedPassword,
+        isVerified: true,
     });
 
     await user.save();
-    await sendAdminUserVerificationMail(email, token);
-
-    res.status(201).json({ message: 'Admin user created and email sent' });
+    res.status(201).json({ message: 'Admin user created' });
 
 }
 
