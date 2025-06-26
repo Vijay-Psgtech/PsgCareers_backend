@@ -127,6 +127,7 @@ const reset_password = async(req,res)=>{
     const hashed_password = await bcrypt.hash(password, 10); 
     user.password = hashed_password;
     user.confirm_password = hashed_password;
+    user.passwordChangeCount = (user.passwordChangeCount || 0) + 1;
     await user.save();
     res.json({message:"Password reset succesfully!"});
   }catch(err){
