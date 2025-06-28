@@ -37,13 +37,15 @@ const JobPostSchema = new mongoose.Schema({
   // Auto generate jobId before saving
   JobPostSchema.pre('save', async function (next) {
   if (this.isNew) {
+    const year = new Date().getFullYear();
+    
     const counter = await Counter.findOneAndUpdate(
-      { id: 'jobId' },
+      { id: `jobId-${year}` },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );
-    const year = new Date().getFullYear();
-    this.jobId = `PSG${year}-${String(counter.seq).padStart(3, '0')}`;
+    
+    this.jobId = `PSG${year}-${String(counter.seq).padStart(4, '0')}`;
   }
   next();
 });

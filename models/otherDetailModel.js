@@ -10,7 +10,6 @@ const ReferenceSchema = new mongoose.Schema({
 
 const OtherDetailsSchema = new mongoose.Schema({
   userId: { type: String, required: true, index: true },
-  jobId: { type: String, required: true, index: true },
   reference1: ReferenceSchema,
   reference2: ReferenceSchema,
   lastPay: String,
