@@ -12,7 +12,7 @@ const educationEntrySchema = new mongoose.Schema({
   type: String,
   arrears: String,
   certificate: String,         // 'Yes' or 'No'
-  certificateFile: String      // Filename if uploaded
+  // certificateFile: String      // Filename if uploaded
 });
 
 const educationSchema = new mongoose.Schema({
