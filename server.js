@@ -42,12 +42,17 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin',adminRoutes);
 app.use('/api/visitors', visitorRoutes);
 
-
 /*MongoDB connection*/
-mongoose.connect(process.env.MONGO_URI)
+/*mongoose.connect(process.env.MONGO_URI)
 .then(()=>{
     app.listen(process.env.PORT,()=>{
         console.log('✅ Server running on http://localhost:'+process.env.PORT)
     })
 })
-.catch(err=>console.error('MongoDB error'+err));
+.catch(err=>console.error('MongoDB error'+err));*/
+mongoose.connect('mongodb://localhost:27017/Career_portal_local')
+  .then(() => 
+    app.listen(process.env.PORT,()=>{
+        console.log('✅ Server running on http://localhost:'+process.env.PORT)
+    }))
+  .catch((err) => console.error("MongoDB connection error:", err));
