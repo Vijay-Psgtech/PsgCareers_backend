@@ -1,10 +1,13 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
+const path = require("path");
+
+const logoPath = path.join(__dirname, "../../client/src/assets/images/logo.png");
 
 const sendVerificationEmail = async (email, token) => {
-  const link = `http://localhost:5173/verify/${token}`;
-  
+  const link = `https://localhost:5173/verify/${token}`;
+
   const transporter = nodemailer.createTransport({
-    service: 'Gmail',
+    service: "Gmail",
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -14,7 +17,7 @@ const sendVerificationEmail = async (email, token) => {
   await transporter.sendMail({
     from: `PSG Careers <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Reset Your Password - PSG Careers',
+    subject: "Reset Your Password - PSG Careers",
     html: `
       <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 40px 0;">
         <table width="100%" cellpadding="0" cellspacing="0">
@@ -23,7 +26,7 @@ const sendVerificationEmail = async (email, token) => {
               <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                 <tr>
                   <td style="text-align: center; padding-bottom: 20px;">
-                    <img src="http://localhost:5173/public/logo.png" alt="PSG Careers" style="height: 60px;" />
+                    <img src="cid:logo@psg" alt="PSG Careers" style="height: 60px;" />
                   </td>
                 </tr>
                 <tr>
@@ -46,7 +49,14 @@ const sendVerificationEmail = async (email, token) => {
           </tr>
         </table>
       </div>
-    `
+    `,
+    attachments: [
+      {
+        filename: "logo.png",
+        path: logoPath,
+        cid: "logo@psg",
+      },
+    ],
   });
 };
 
