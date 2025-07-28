@@ -27,6 +27,7 @@ const researchRoutes = require('./routes/researchRoutes.js');
 const userRoutes = require('./routes/userRoutes.js');
 const adminRoutes = require('./routes/adminRoutes.js');
 const visitorRoutes = require('./routes/visitors');
+const reportRoutes = require('./routes/reportsRoutes.js');
 
 // Use routes
 app.use('/api/auth',authRoutes);
@@ -41,6 +42,7 @@ app.use('/api/research', researchRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin',adminRoutes);
 app.use('/api/visitors', visitorRoutes);
+app.use('/api/reports',reportRoutes);
 
 /*MongoDB connection*/
 /*mongoose.connect(process.env.MONGO_URI)
