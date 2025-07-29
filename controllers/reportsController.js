@@ -1,5 +1,6 @@
 const Application = require('../models/ApplicationModel');
 const JobPost = require('../models/jobPostModels');
+const User = require('../models/userModels');
 
 exports.appliedCandidates = async (req, res) => {
   try {
@@ -82,3 +83,19 @@ exports.appliedCandidates = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+exports.registeredNotApplied = async(req, res) => {
+  try{
+    const appliedUserIds = await Application.distinct('userId');
+
+    const users = await User.find({
+      userId: { $nin: appliedUserIds },
+      role: 'user'
+    }).select('first_name last_name email mobile jobCategory createdAt').sort({createdAt: -1});
+
+    res.json(users);
+  }catch(err){
+    console.error("Error in registered not applied candidates:", err);
+    return res.status(500).json({ sucess: false, message: "Server Error" });
+  }
+}
