@@ -1,6 +1,8 @@
 const Application = require('../models/ApplicationModel');
 const JobPost = require('../models/jobPostModels');
 const User = require('../models/userModels');
+const ApplicationDrafts = require('../models/ApplicationDraft');
+const PersonalDetails = require("../models/personalDetails");
 
 exports.appliedCandidates = async (req, res) => {
   try {
@@ -88,14 +90,54 @@ exports.registeredNotApplied = async(req, res) => {
   try{
     const appliedUserIds = await Application.distinct('userId');
 
-    const users = await User.find({
-      userId: { $nin: appliedUserIds },
-      role: 'user'
-    }).select('first_name last_name email mobile jobCategory createdAt').sort({createdAt: -1});
+    const users = await User.aggregate([
+      {
+        $match: {
+          userId: { $nin: appliedUserIds },
+          role: 'user',
+        },
+      },
+      {
+        $lookup: {
+          from: 'personaldetails', // collection name (note: lowercase and plural by MongoDB convention)
+          localField: 'userId',
+          foreignField: 'userId',
+          as: 'personalInfo',
+        },
+      },
+      {
+        $unwind: {
+          path: '$personalInfo',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          first_name: 1,
+          last_name: 1,
+          email: 1,
+          mobile: 1,
+          jobCategory: 1,
+          createdAt: 1,
+          resume: '$personalInfo.resumeUrl',
+        },
+      },
+      { $sort: { createdAt: -1 } },
+    ]);
 
     res.json(users);
   }catch(err){
     console.error("Error in registered not applied candidates:", err);
+    return res.status(500).json({ sucess: false, message: "Server Error" });
+  }
+}
+
+exports.ApplicationDraftCandidates = async(req, res) => {
+  try{
+    const Drafts = await ApplicationDrafts.find().sort({ createdAt: -1});
+    res.json(Drafts);
+  }catch(err){
+    console.error("Error in ApplicationDrafts:", err);
     return res.status(500).json({ sucess: false, message: "Server Error" });
   }
 }

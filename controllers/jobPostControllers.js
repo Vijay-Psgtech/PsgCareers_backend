@@ -100,8 +100,20 @@ const copyJob = async (req, res) => {
 };
 
 const DeleteJob = async(req,res) => {
-    await JobPost.findByIdAndDelete(req.params.id);
-    res.json({message:'Job Deleted'});
+    try{
+        const jobs = await JobPost.findById(req.params.id);
+        if(jobs){
+            const AppliedJob = await Application.findOne({jobId: jobs.jobId});
+            if(AppliedJob){
+                await Application.findByIdAndDelete(AppliedJob._id);
+            }
+        }
+        await JobPost.findByIdAndDelete(req.params.id);
+        res.json({message:'Job Deleted'});
+    }catch(err){
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+    
 }
 
 const JobsWithCount = async(req,res)=>{
