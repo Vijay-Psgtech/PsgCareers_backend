@@ -29,7 +29,8 @@ const userSchema = new mongoose.Schema({
         timestamp: { type: Date, default: Date.now },
         },
     ],
-});
+},{
+  timestamps: true });
 
 //Auto-generate userId before Saving
 userSchema.pre('save', async function(next){
