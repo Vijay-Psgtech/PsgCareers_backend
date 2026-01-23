@@ -43,10 +43,6 @@ const ResearchContributionSchema = new mongoose.Schema({
   consultancy: [dynamicFieldSchema],
   conferences: [dynamicFieldSchema],
   visits: [dynamicFieldSchema],
-
-  
- 
-
 }, {
   timestamps: true,
 });

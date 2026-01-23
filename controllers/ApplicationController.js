@@ -64,7 +64,7 @@ exports.submitApplication = async(req,res) => {
 }
 
 
-exports.candidateDetails = async (req, res) => {
+/*exports.candidateDetails = async (req, res) => {
   try {
     const jobId = req.params.jobId;
     const page = parseInt(req.query.page) || 1;
@@ -152,6 +152,87 @@ exports.candidateDetails = async (req, res) => {
       currentPage: page,
       totalPages: Math.ceil(total / limit),
       totalItems: total
+    });
+
+  } catch (error) {
+    console.error("Error fetching applicants:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+}; */
+
+exports.candidateDetails = async (req, res) => {
+  try {
+    const jobId = req.params.jobId;
+
+    const results = await Application.aggregate([
+      { $match: { jobId } },
+
+      // Lookup: Personal Details
+      {
+        $lookup: {
+          from: "personaldetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "personalDetails"
+        }
+      },
+      { $unwind: { path: "$personalDetails", preserveNullAndEmptyArrays: true } },
+
+      // Lookup: Education Details
+      {
+        $lookup: {
+          from: "educationdetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "educationDetails"
+        }
+      },
+
+      // Lookup: Work Experience
+      {
+        $lookup: {
+          from: "workexperiencedetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "workExperienceDetails"
+        }
+      },
+
+      // Lookup: Other Details
+      {
+        $lookup: {
+          from: "otherdetails",
+          localField: "userId",
+          foreignField: "userId",
+          as: "otherDetails"
+        }
+      },
+
+      // Project required fields
+      {
+        $project: {
+          userId: 1,
+          jobId: 1,
+          stage: 1,
+          status: 1,
+          rejectedAtStage: 1,
+          createdAt: 1,
+          remarks: 1,
+          personalDetails: 1,
+          educationDetails: 1,
+          workExperienceDetails: 1,
+          otherDetails: 1
+        }
+      },
+
+      // Sort by createdAt descending (latest first)
+      { $sort: { createdAt: -1 } },
+
+    ]);
+
+
+    res.status(200).json({
+      data: results,
     });
 
   } catch (error) {
