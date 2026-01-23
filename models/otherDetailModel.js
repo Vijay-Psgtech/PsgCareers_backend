@@ -1,17 +1,9 @@
 const mongoose = require('mongoose');
 
-const ReferenceSchema = new mongoose.Schema({
-  name: String,
-  address: String,
-  designation: String,
-  mobile: String,
-  email: String,
-});
-
-const OtherDetailsSchema = new mongoose.Schema({
-  userId: { type: String, required: true, index: true },
-  reference1: ReferenceSchema,
-  reference2: ReferenceSchema,
+const otherDetailsSchema = new mongoose.Schema({
+  userId: { type: String, required: true, unique: true },
+  reference1: Object,
+  reference2: Object,
   lastPay: String,
   expectedPay: String,
   joiningTime: String,
@@ -19,7 +11,13 @@ const OtherDetailsSchema = new mongoose.Schema({
   attendedPSGInterview: String,
   vacancySource: String,
   otherComments: String,
-  resumeUrl: String,  // For uploaded resume file URL
+  documents: {
+    type: Map,
+    of: String, // label -> filepath
+    default: {},
+  },
 }, { timestamps: true });
 
-module.exports = mongoose.model('OtherDetails', OtherDetailsSchema);
+module.exports = mongoose.model('OtherDetails', otherDetailsSchema);
+
+

@@ -6,7 +6,6 @@ exports.landingVisit = async(req, res)=>{
 
   try {
     const existing = await Visitor.findOne({ fingerprint });
-    
     if (!existing) {
       await Visitor.create({ fingerprint });
     }
